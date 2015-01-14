@@ -1,0 +1,16 @@
+### Starting build.
+# Target: consT_server.ml.depends, tags: { extension:ml, file:consT_server.ml, ocaml, ocamldep, package(lwt.unix,lwt,tls,tls.lwt,x509,lwt.syntax), quiet, syntax(camlp4o) }
+ocamlfind ocamldep -syntax camlp4o -package lwt.unix,lwt,tls,tls.lwt,x509,lwt.syntax -modules consT_server.ml > consT_server.ml.depends
+# Target: consT_server.cmo, tags: { byte, compile, extension:cmo, extension:ml, file:consT_server.cmo, file:consT_server.ml, implem, ocaml, package(lwt.unix,lwt,tls,tls.lwt,x509,lwt.syntax), quiet, syntax(camlp4o) }
+ocamlfind ocamlc -c -syntax camlp4o -package lwt.unix,lwt,tls,tls.lwt,x509,lwt.syntax -o consT_server.cmo consT_server.ml
++ ocamlfind ocamlc -c -syntax camlp4o -package lwt.unix,lwt,tls,tls.lwt,x509,lwt.syntax -o consT_server.cmo consT_server.ml
+File "consT_server.ml", line 11, characters 6-8:
+Warning 26: unused variable ic.
+# Target: consT_server.cmx, tags: { compile, extension:cmx, extension:ml, file:consT_server.cmx, file:consT_server.ml, implem, native, ocaml, package(lwt.unix,lwt,tls,tls.lwt,x509,lwt.syntax), quiet, syntax(camlp4o) }
+ocamlfind ocamlopt -c -syntax camlp4o -package lwt.unix,lwt,tls,tls.lwt,x509,lwt.syntax -o consT_server.cmx consT_server.ml
++ ocamlfind ocamlopt -c -syntax camlp4o -package lwt.unix,lwt,tls,tls.lwt,x509,lwt.syntax -o consT_server.cmx consT_server.ml
+File "consT_server.ml", line 11, characters 6-8:
+Warning 26: unused variable ic.
+# Target: consT_server.native, tags: { dont_link_with, extension:native, file:consT_server.native, link, native, ocaml, package(lwt.unix,lwt,tls,tls.lwt,x509,lwt.syntax), program, quiet, syntax(camlp4o) }
+ocamlfind ocamlopt -linkpkg -syntax camlp4o -package lwt.unix,lwt,tls,tls.lwt,x509,lwt.syntax consT_server.cmx -o consT_server.native
+# Compilation successful.
