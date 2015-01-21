@@ -1,1 +1,1 @@
-ct_wget.ml: Array Lwt Lwt_io Lwt_main Sys Tls_lwt Unix X509
+ct_wget.ml: Abuilder Array Lwt Lwt_io Lwt_main String Sys Tls_lwt Unix

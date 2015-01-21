@@ -1,0 +1,8 @@
+### Starting build.
+# Target: consT_server.ml.depends, tags: { extension:ml, file:consT_server.ml, ocaml, ocamldep, package(lwt.unix,lwt,tls,tls.lwt), quiet }
+ocamlfind ocamldep -package lwt.unix,lwt,tls,tls.lwt -modules consT_server.ml > consT_server.ml.depends
++ ocamlfind ocamldep -package lwt.unix,lwt,tls,tls.lwt -modules consT_server.ml > consT_server.ml.depends
+File "consT_server.ml", line 16, characters 60-62:
+Error: Syntax error
+Command exited with code 2.
+# Compilation unsuccessful.
