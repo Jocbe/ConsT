@@ -1,5 +1,0 @@
-"Rule: ocaml: ml & cmi -> cmx & o (%=ct_wget )": "\172\164\024\012 \144\240y\241H\2354\022Tn\211"
-"Rule: ocaml: ml -> cmo & cmi (%=ct_wget )": "\197\166l\151\223\248\242\031\169~\227k}T\020\019"
-"Rule: ocaml: cmx* & o* -> native (%=ct_wget )": "\177\187\1695\245\"\234\189& \172-f8\242\251"
-"Resource: /home/jocbe/sdev/ConsT/client/ct_wget.ml": "\241\223\203[\152\200\148\029\189n\205\225\235\134_\205"
-"Rule: ocaml dependencies ml (%=ct_wget )": "\023\201\159&\183\2484\014\186\0232M\212m\026\154"

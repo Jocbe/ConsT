@@ -16,15 +16,33 @@ let () = Lwt_main.run begin
   
   let authlet_r = Abuilder.Authlet.remote ~port:ts_port ts_host in
   let authlet_l = Abuilder.Authlet.logger "test.log" in
-  let cnf = Abuilder.Conf.add (Abuilder.Conf.from_authlet authlet_r) authlet_l in
+  let cnf = Abuilder.Conf.add_authlet (Abuilder.Conf.from_authlet authlet_r) authlet_l in
   
-  lwt auth = Abuilder.Conf.build cnf in
+  lwt auth = Abuilder.Conf.build cnf (host, port) in
   lwt (ic, oc) = Tls_lwt.connect auth (host, port) in
   
   let req = String.concat "\r\n" [
     "GET " ^ path ^ " HTTP/1.1" ; "Host: " ^ host  ; "Connection: close" ; "" ; ""
   ] in 
   Lwt_io.(write oc req >> read ic >>= printf "Got this:\n%s\n")
+  
+  (*let slashi = String.rindex path '/' in
+  let path_filename = String.sub path (slashi + 1) ((String.length path) - slashi - 1) in
+  let filename = 
+    if string.length path_filename > 0 then
+      path_filename
+    else 
+      "index.html"
+  in
+  let find_first_empty_line str start =
+    let i = String.index_from str start '\n' in
+    if String.get str (i + 1) == '\r' then
+      i + 3
+    else
+      find_first_empty_line str (i + 1)
+  in
+  let file_contents *)
+  
 
  (* let ts_addr = Unix.ADDR_INET ((gethostbyname ts_host).h_addr_list.(0), ts_port) in
   lwt () = Tls_lwt.rng_init ()in

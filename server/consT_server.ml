@@ -1,7 +1,5 @@
 open Lwt
 
-let host = "DEFAULT HOST"
-let port = 443
 let server_cert_file = "/home/jocbe/sdev/ConsT/certs/demo-localhost.crt"
 let server_pk_file = "/home/jocbe/sdev/ConsT/certs/demo-localhost.key"
 let trusted_cas = "/home/jocbe/sdev/ConsT/certs/rootCA_jocbe_2015.crt"
@@ -18,16 +16,16 @@ let worker ic oc sockaddr () =
     | Some (h, (c, s)) -> (h, (c, s))
     (*| None ->*)*)
   
-  lwt ((c, stack), host) = Lwt_io.read_value ic in
+  lwt ((r_host, r_port), ((c, stack), host)) = Lwt_io.read_value ic in
   let host_str = match host with
     | None -> "UNKNOWN HOST"
     | Some (`Wildcard h) -> h
     | Some (`Strict h) -> h
   in
   lwt authenticator = X509_lwt.authenticator (`Ca_file trusted_cas) in
-  Lwt_io.(printf "Host %s, port %i\n" host_str port);
+  Lwt_io.(printf "Host %s, port %i\n" r_host r_port);
   lwt res = X509.Authenticator.authenticate authenticator ?host:host (c, stack) in
- Lwt_io.(write_value oc res >> close oc >> close ic);;
+  Lwt_io.(write_value oc res >> close oc >> close ic);;
 
 let rec listener (server_certs, pk) server_socket =
   lwt ((ic, oc), sockaddr) = Tls_lwt.accept (server_certs, pk) server_socket in
