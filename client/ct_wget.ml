@@ -9,18 +9,28 @@ let port =
     443;;
 let path = Sys.argv.(3)
 let ts_host = "localhost"
-let ts_port = 8080;;
+let ts_port = int_of_string Sys.argv.(4);;
 
 let () = Lwt_main.run begin
   lwt () = Tls_lwt.rng_init () in
-  
-  let authlet_r = Abuilder.Authlet.remote ~port:ts_port ts_host in
+lwt () = Lwt_io.printf "Trying to get the policy...\n" in
+  let authlet_ts = Abuilder.Authlet.ca_file "/home/jocbe/sdev/ConsT/certs/demoCA.crt" in
+  lwt auth_ts = Abuilder.Conf.build (Abuilder.Conf.from_authlet authlet_ts) (ts_host, ts_port) in
+  lwt (ic, oc) = Tls_lwt.connect auth_ts (ts_host, ts_port) in
+  lwt resp = Lwt_io.(write_value oc `Policy >> read_value ic) in
+  let policy = match resp with
+    | `Unsupported -> raise (Invalid_argument "Getting the policy is unsupported!")
+    | `Policy p -> p
+  in
+lwt () = Lwt_io.printf "Got policy. Connecting to %s using that policy.\n" host in
+  (*let authlet_r = Abuilder.Authlet.remote ~port:ts_port ts_host in
   let authlet_l = Abuilder.Authlet.logger "test.log" in
-  let cnf = Abuilder.Conf.add_authlet (Abuilder.Conf.from_authlet authlet_r) authlet_l in
+  let cnf = Abuilder.Conf.add_authlet (Abuilder.Conf.from_authlet authlet_r) authlet_l in*)
   
-  lwt auth = Abuilder.Conf.build cnf (host, port) in
+  (*lwt auth = Abuilder.Conf.build cnf (host, port) in*)
+  lwt auth = Abuilder.Conf.build policy (host, port) in
   lwt (ic, oc) = Tls_lwt.connect auth (host, port) in
-  
+lwt () = Lwt_io.printf "Connected.\n" in
   let req = String.concat "\r\n" [
     "GET " ^ path ^ " HTTP/1.1" ; "Host: " ^ host  ; "Connection: close" ; "" ; ""
   ] in 
