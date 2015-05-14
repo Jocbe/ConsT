@@ -1,8 +1,12 @@
 open Lwt
 
-let server_cert_file = "/home/jocbe/sdev/ConsT/certs/demo-localhost.crt"
-let server_pk_file = "/home/jocbe/sdev/ConsT/certs/demo-localhost.key"
-let trusted_cas = "/home/jocbe/sdev/ConsT/certs/rootCA_jocbe_2015.crt"
+(* ##################################################################### *)
+(* This application is obsolete! Please refer to consT_server_3 instead! *)
+(* ##################################################################### *)
+
+let server_cert_file = "../certs/demo-localhost.crt"
+let server_pk_file = "../certs/demo-localhost.key"
+let trusted_cas = "../sdev/ConsT/certs/rootCA_jocbe_2015.crt"
 let max_con = 16
 let myport = int_of_string Sys.argv.(1);;
 

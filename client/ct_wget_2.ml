@@ -1,15 +1,21 @@
 open Lwt
 
-let ts_ca = "/home/jocbe/sdev/ConsT/certs/demoCA.crt"
+(* This application is a simple wget-like tool that will send HTTPS requests 
+   to retrieve the file(s) from url(s) given as arguments. It uses ConTrust
+   (the authbuilder library) for authentication. This tool only works via
+   TLS and will not work for plain HTTP! *)
 
+let ts_ca = "../certs/demoCA.crt"
 let ts_host = Sys.argv.(1)
 let ts_port = int_of_string Sys.argv.(2)
-(*let r_host = Sys.argv.(3)
-let r_port = int_of_string Sys.argv.(4)
-let r_path = Sys.argv.(5)*)
 
+(* Some logic to extract the host, port and path from a URL of
+   the form: <host>[:port][/path] *)
 let parse_url url = 
   let len = String.length url in
+  
+  (* Find the start of the path (first slash - we do not handle
+     urls starting with "http://" or "https://" at the moment *)
   let (slash_pos, path) = 
     if String.contains url '/' then
       let pos = String.index url '/' in
@@ -18,6 +24,8 @@ let parse_url url =
     else 
       (len, "/")
   in
+
+  (* Find where the port number is *)
   let (colon_pos, port) =
     if String.contains url ':' then
       let pos = String.index url ':' in
@@ -26,7 +34,11 @@ let parse_url url =
     else
       (slash_pos, 443)
   in
+
   let host = String.sub url 0 colon_pos in
+
+  (* Attempt to determine the file name. If it isn't given by the
+     path, then default to index.html *)
   let filename =
     if String.contains url '/' then
       let pos = String.rindex url '/' in
@@ -39,7 +51,13 @@ let parse_url url =
   in
   (host, port, path, filename)
 
+(* A function to write the file we received to disk. *)
 let rec write_file ?num filename data =
+
+  (* Some logic for renaming a file if a file with the same name already
+     exists. Say file xyz.ext already exists. The file is then renamed
+     to xyz_(N).ext where N is the minimun positive integer such that a
+     file with that name does not already exist. *)
   let filename_postfix = match num with
     | None -> filename
     | Some n -> 
@@ -49,49 +67,60 @@ let rec write_file ?num filename data =
       else
 	filename ^ "_(" ^ string_of_int n ^ ")"
   in
+  
+  (* Finally, attepmt to write the file to disk *)
   begin try_lwt
     lwt oc = Lwt_io.open_file ~flags:[Unix.O_WRONLY; Unix.O_CREAT; Unix.O_EXCL] ~mode:Lwt_io.Output filename_postfix in
-    Lwt_io.(write oc data >> close oc)
-  with
-  | Unix.Unix_error _ -> match num with
-    | None -> write_file ~num:1 filename data
-    | Some n -> write_file ~num:(n + 1) filename data
+    Lwt_io.(write oc data >> close oc >> printf "Wrote to file '%s'\n" filename_postfix)
+    with
+      | Unix.Unix_error _ -> match num with
+      | None -> write_file ~num:1 filename data
+      | Some n -> write_file ~num:(n + 1) filename data
   end  
 
+(* Function to retrieve the data from all given urls sequentially *)
 let rec get_all client i =
   if Array.length Sys.argv > i then
     let (host, port, path, filename) = parse_url Sys.argv.(i) in
-    lwt () = Lwt_io.printf "#################\nGetting #%i: %s:%i%s...\n" i host port path in
+    lwt () = Lwt_io.printf "#################\nGetting #%i: %s:%i%s...\n" (i-2) host port path in
+
     lwt () = begin try_lwt
       lwt (ic, oc) = client#connect (host, port) in
+
       let req = String.concat "\r\n" [
 	"GET " ^ path ^ " HTTP/1.1" ; "Host: " ^ host ; "Connection: close" ; "" ; ""
       ] in
-      (*lwt () = Lwt_io.(write oc req >> read ic >>= printf "Got this for #%i:\n%s\n" i) in*)
-      lwt () = Lwt_io.(write oc req >> read ic >>= write_file ("downloads/" ^ filename) >> print "Yay\n\n") in
+
+      (* This application is for demonstration purposes. Hence, to keep our
+	 directory clean, we will download everything to ./downloads/ *)
+      lwt () = Lwt_io.(write oc req >> read ic >>= write_file ("downloads/" ^ filename)) in
       Lwt_io.(close oc >> close ic);
-      (*get_all client (i + 1)*)
+
     with
-    | Tls_lwt.Tls_failure _ ->
-        Lwt_io.print "TLS failure! Not connecting.\n";
-        (*get_all client (i + 1)*)
-    | Invalid_argument m ->
-        Lwt_io.printf "Invalid Argument: %s\n" m;
-        (*get_all client (i + 1)*)
+      | Tls_lwt.Tls_failure _ ->
+          Lwt_io.print "TLS failure! Not connecting.\n";
+      | Invalid_argument m ->
+          Lwt_io.printf "Invalid Argument: %s\n" m;
     end in
+
     lwt () = Lwt_io.printf "END: %i\n" i in
+
+    (* Get next url *)
     get_all client (i + 1)
   else return ()
 
 let () = Lwt_main.run begin
+  (* Make sure the random generator is seeded *)
   lwt () = Tls_lwt.rng_init () in
-  let conf = Abuilder.Conf.from_authlet (Abuilder.Authlet.ca_file ts_ca) in
-  lwt client = Trust_client.from_ts_info ((ts_host, ts_port), conf) in
+		      
+  (* Retrieve a configuration from the trust server... *)
+  let conf = Abuilder.Conf.of_authlet (Abuilder.Authlet.ca_file ts_ca) in
+  (* ...and create a client with it. *)
+  lwt client = Trust_client.of_ts_info ((ts_host, ts_port), conf) in
+
+  (* The '3' here simply indicates that the first url to get will be
+     argument number 3. *)
   get_all client 3
-  (*lwt (ic, oc) = client#connect (r_host, r_port) in
-  let req = String.concat "\r\n" [
-    "GET " ^ r_path ^ " HTTP/1.1" ; "Host: " ^ r_host ; "Connection: close" ; "" ; ""
-  ] in
-  Lwt_io.(write oc req >> read ic >>= printf "Got this:\n%s\n")*)
+
 end
 

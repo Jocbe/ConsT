@@ -1,6 +1,10 @@
 open Lwt
 open Unix
 
+(* ################################################################ *)
+(* This application is obsolete! Please refer to ct_wget_2 instead!
+(* ################################################################ *)
+
 let host = Sys.argv.(1)
 let port = 
   if Array.length Sys.argv > 2 then
